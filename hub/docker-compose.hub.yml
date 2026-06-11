@@ -1,0 +1,17 @@
+services:
+  hub-gateway:
+    build: ./gateway
+    container_name: hub-gateway
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./modules.json:/app/modules.json:ro
+      - ./dashboard:/app/dashboard:ro
+    environment:
+      - MODULES_FILE=/app/modules.json
+      - DASHBOARD_DIR=/app/dashboard
+      # The gateway pings module ports published on the host machine.
+      - HEALTH_HOST=host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped

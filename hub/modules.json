@@ -1,0 +1,49 @@
+{
+  "hub_name": "Mission Control",
+  "modules": [
+    {
+      "id": "supoclip",
+      "name": "SupoClip",
+      "tagline": "AI video clipping",
+      "description": "Turn long-form video into viral 9:16 clips with AI segment selection, word-synced captions, and face-centered cropping.",
+      "url": "http://localhost:3000",
+      "repo": "https://github.com/jcmd7/supoclip",
+      "tags": ["content", "video", "ai"],
+      "services": [
+        { "name": "frontend", "health_url": "http://{host}:3000" },
+        { "name": "api", "health_url": "http://{host}:8000/docs" }
+      ]
+    },
+    {
+      "id": "flowsint",
+      "name": "Flowsint",
+      "tagline": "Graph-based OSINT investigations",
+      "description": "Visual, extensible entity-graph investigations: domains, IPs, ASNs, WHOIS, subdomain discovery and other enrichers.",
+      "url": "http://localhost:5173",
+      "repo": "https://github.com/reconurge/flowsint",
+      "tags": ["intel", "graph", "security"],
+      "services": [
+        { "name": "frontend", "health_url": "http://{host}:5173" }
+      ]
+    },
+    {
+      "id": "mirofish",
+      "name": "MiroFish",
+      "tagline": "Swarm-intelligence prediction engine",
+      "description": "Spawns societies of AI agents from real-world seed data (news, reports, drafts) and simulates how events unfold, producing prediction reports.",
+      "url": "http://localhost:3100",
+      "repo": "https://github.com/666ghj/MiroFish",
+      "tags": ["simulation", "forecasting", "agents"],
+      "services": [
+        { "name": "frontend", "health_url": "http://{host}:3100" },
+        { "name": "api", "health_url": "http://{host}:5001" }
+      ]
+    }
+  ],
+  "feeds": [
+    { "name": "Hacker News", "url": "https://news.ycombinator.com/rss" },
+    { "name": "BBC World", "url": "https://feeds.bbci.co.uk/news/world/rss.xml" },
+    { "name": "TechCrunch", "url": "https://techcrunch.com/feed/" },
+    { "name": "Ars Technica", "url": "https://feeds.arstechnica.com/arstechnica/index" }
+  ]
+}

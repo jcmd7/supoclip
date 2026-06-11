@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mission Control</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-mark">◉</span>
+      <h1 id="hub-name">MISSION CONTROL</h1>
+    </div>
+    <div class="meta">
+      <span id="overall-status" class="pill">—</span>
+      <span id="clock" class="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel modules-panel">
+      <h2>// MODULES</h2>
+      <div id="modules" class="modules-grid">
+        <p class="muted">Loading modules…</p>
+      </div>
+    </section>
+
+    <aside class="panel news-panel">
+      <h2>// SIGNAL FEED</h2>
+      <div id="news" class="news-list">
+        <p class="muted">Loading feeds…</p>
+      </div>
+    </aside>
+  </main>
+
+  <footer>
+    <span>gateway :8090</span>
+    <span id="last-check" class="muted"></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
