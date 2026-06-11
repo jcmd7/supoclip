@@ -129,6 +129,80 @@ async function refreshNews() {
   }
 }
 
+let marketItems = [];
+
+function renderMarkets() {
+  const container = document.getElementById("markets");
+  const needle = document.getElementById("market-search").value.toLowerCase();
+  const items = marketItems.filter((m) =>
+    m.question.toLowerCase().includes(needle)
+  );
+  container.innerHTML = "";
+  if (!items.length) {
+    container.appendChild(el("p", "muted", "No markets (check network)."));
+    return;
+  }
+  for (const m of items.slice(0, 25)) {
+    const link = el("a", "news-item market-row");
+    link.href = m.url;
+    link.target = "_blank";
+    const q = el("div", "market-q");
+    q.appendChild(el("div", "news-title", m.question));
+    const meta = el("div", "news-meta");
+    const tag = el("span", "src-tag", m.source);
+    meta.appendChild(tag);
+    meta.appendChild(
+      el("span", null, ` $${Number(m.volume_24h).toLocaleString()} 24h`)
+    );
+    q.appendChild(meta);
+    link.appendChild(q);
+    const pctClass = m.yes_pct >= 70 ? "pct high" : m.yes_pct <= 30 ? "pct low" : "pct";
+    link.appendChild(el("span", pctClass, m.yes_pct !== null ? `${m.yes_pct}%` : "—"));
+    container.appendChild(link);
+  }
+}
+
+async function refreshMarkets() {
+  try {
+    const data = await fetchJson("/api/markets");
+    marketItems = data.items;
+    renderMarkets();
+  } catch {
+    marketItems = [];
+    renderMarkets();
+  }
+}
+
+async function refreshHN() {
+  const container = document.getElementById("hn");
+  try {
+    const data = await fetchJson("/api/hn");
+    container.innerHTML = "";
+    if (!data.items.length) {
+      container.appendChild(el("p", "muted", "No stories (check network)."));
+      return;
+    }
+    for (const item of data.items) {
+      const link = el("a", "news-item");
+      link.href = item.url;
+      link.target = "_blank";
+      link.appendChild(el("div", "news-title", item.title));
+      const meta = el("div", "news-meta");
+      meta.appendChild(el("span", "src", `▲ ${item.points}`));
+      const comments = el("a", null, ` · ${item.comments} comments`);
+      comments.href = item.hn_url;
+      comments.target = "_blank";
+      comments.style.color = "inherit";
+      meta.appendChild(comments);
+      link.appendChild(meta);
+      container.appendChild(link);
+    }
+  } catch {
+    container.innerHTML = "";
+    container.appendChild(el("p", "muted", "HN fetch failed."));
+  }
+}
+
 function tickClock() {
   document.getElementById("clock").textContent =
     new Date().toLocaleTimeString([], { hour12: false });
@@ -152,8 +226,13 @@ async function init() {
   renderModules({});
   refreshStatus();
   refreshNews();
+  refreshMarkets();
+  refreshHN();
+  document.getElementById("market-search").addEventListener("input", renderMarkets);
   setInterval(refreshStatus, STATUS_INTERVAL_MS);
   setInterval(refreshNews, NEWS_INTERVAL_MS);
+  setInterval(refreshMarkets, 60 * 1000);
+  setInterval(refreshHN, 2 * 60 * 1000);
 }
 
 init();

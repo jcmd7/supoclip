@@ -26,11 +26,30 @@
       </div>
     </section>
 
-    <aside class="panel news-panel">
-      <h2>// SIGNAL FEED</h2>
-      <div id="news" class="news-list">
-        <p class="muted">Loading feeds…</p>
-      </div>
+    <aside class="rail">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>// MARKETS</h2>
+          <input id="market-search" class="search" type="search" placeholder="filter…" />
+        </div>
+        <div id="markets" class="news-list rail-list">
+          <p class="muted">Loading markets…</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>// HACKER NEWS</h2>
+        <div id="hn" class="news-list rail-list">
+          <p class="muted">Loading…</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>// SIGNAL FEED</h2>
+        <div id="news" class="news-list rail-list">
+          <p class="muted">Loading feeds…</p>
+        </div>
+      </section>
     </aside>
   </main>
 
