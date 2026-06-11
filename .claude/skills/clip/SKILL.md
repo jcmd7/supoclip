@@ -120,11 +120,35 @@ repo bundles `backend/transitions/circle_transition.mp4` and
 `flat_transition_1.mp4`). Inputs are auto-normalized to the first clip's
 resolution / 30fps / 48kHz, so mixed sources work.
 
-### 5. Deliver
+### 5. Review
 
 Use SendUserFile to send finished clips (status `proactive` if the user stepped
 away). Summarize each: timestamp range, hook, virality scores, why you picked
 it, template used.
+
+### 6. Approve → publish (NEVER skip approval)
+
+Publishing is opt-in and gated on explicit approval **every time**:
+
+1. After the user has seen the clips, use AskUserQuestion (multiSelect) listing
+   each clip so they pick exactly which to publish, plus target and privacy.
+   Past approval never carries over to new clips.
+2. Publish only the approved ones:
+
+```bash
+python3 scripts/publish.py clips/clip1.mp4 --target youtube \
+  --title "THIS CHANGED EVERYTHING" --tags shorts,clips --privacy unlisted
+python3 scripts/publish.py clips/clip1.mp4 --target webhook --url https://...
+```
+
+- `youtube`: official Data API. One-time setup: OAuth Desktop-app client from
+  console.cloud.google.com with YouTube Data API v3 enabled → save as
+  `~/.config/clip-skill/client_secrets.json` (or set `YT_CLIENT_SECRETS`).
+  First publish opens a browser consent; token is cached after. Default
+  privacy is `unlisted` — use `public` only if the user said so.
+- `webhook`: multipart POST (file + title/description/tags fields) to any URL
+  (`--url` or `WEBHOOK_URL`). The path for TikTok/IG via n8n.
+- `--dry-run` prints what would be uploaded without sending.
 
 ## Notes / gotchas
 
