@@ -199,6 +199,45 @@ def parse_broll(spec: str):
     return path, float(start), float(end)
 
 
+def tighten_intervals(words, start, end, max_gap, pad=0.15):
+    """Keep-intervals (clip-relative) that drop silences longer than max_gap.
+
+    Returns (intervals, remapped_words): intervals are [(s, e), ...] within
+    [0, end-start]; remapped_words carry timings on the tightened timeline so
+    captions stay word-synced.
+    """
+    window = [w for w in words if w["e"] > start and w["s"] < end]
+    if not window:
+        return [(0.0, end - start)], []
+
+    rel = [{"w": w["w"], "s": max(w["s"] - start, 0.0), "e": min(w["e"] - start, end - start)}
+           for w in window]
+    clip_len = end - start
+
+    intervals = []
+    cur_s = max(rel[0]["s"] - pad, 0.0)
+    cur_e = rel[0]["e"]
+    for w in rel[1:]:
+        if w["s"] - cur_e > max_gap:
+            intervals.append((cur_s, min(cur_e + pad, clip_len)))
+            cur_s = max(w["s"] - pad, 0.0)
+        cur_e = w["e"]
+    intervals.append((cur_s, min(cur_e + pad, clip_len)))
+
+    # Remap word timings onto the tightened timeline.
+    remapped, offset = [], 0.0
+    it = iter(intervals)
+    cur = next(it)
+    for w in rel:
+        while w["s"] >= cur[1]:
+            offset += cur[1] - cur[0]
+            cur = next(it)
+        new_s = offset + (w["s"] - cur[0])
+        remapped.append({"w": w["w"], "s": round(max(new_s, 0), 3),
+                         "e": round(max(new_s, 0) + (w["e"] - w["s"]), 3)})
+    return intervals, remapped
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("source")
@@ -217,7 +256,18 @@ def main() -> int:
     parser.add_argument("--broll", action="append", default=[], metavar="FILE:START:END",
                         help="overlay b-roll video during clip-relative window (repeatable)")
     parser.add_argument("--fontsdir", help="directory of .ttf fonts for captions")
+    parser.add_argument("--tighten", type=float, metavar="MAX_GAP",
+                        help="jump-cut silences longer than MAX_GAP seconds "
+                             "(needs --transcript; not combinable with --broll)")
     args = parser.parse_args()
+
+    if args.tighten and args.broll:
+        print("--tighten cannot be combined with --broll (apply b-roll on a second pass)",
+              file=sys.stderr)
+        return 1
+    if args.tighten and not args.transcript:
+        print("--tighten needs --transcript for word timings", file=sys.stderr)
+        return 1
 
     duration = args.end - args.start
     if duration <= 0:
@@ -243,11 +293,25 @@ def main() -> int:
         play_w, play_h = 1920, 1080
         base_vf = f"scale={play_w}:-2,setsar=1"
 
+    words = None
+    if args.transcript and Path(args.transcript).exists():
+        words = json.loads(Path(args.transcript).read_text())["words"]
+
+    intervals = None
+    if args.tighten:
+        if not words:
+            print("transcript file missing or empty", file=sys.stderr)
+            return 1
+        intervals, remapped = tighten_intervals(words, args.start, args.end, args.tighten)
+        tight_dur = sum(e - s for s, e in intervals)
+        caption_words, cap_start, cap_end = remapped, 0.0, tight_dur
+    else:
+        caption_words, cap_start, cap_end = words, args.start, args.end
+
     subs_filter = ""
-    if not args.no_captions and args.transcript and Path(args.transcript).exists():
-        data = json.loads(Path(args.transcript).read_text())
+    if not args.no_captions and caption_words:
         ass_text = build_ass(
-            data["words"], args.start, args.end, play_w, play_h, args.template, args.title
+            caption_words, cap_start, cap_end, play_w, play_h, args.template, args.title
         )
         ass_path = out.with_suffix(".ass")
         ass_path.write_text(ass_text)
@@ -282,6 +346,17 @@ def main() -> int:
         else:
             graph.append(f"[{last}]null[vout]")
         cmd += ["-filter_complex", ";".join(graph), "-map", "[vout]", "-map", "0:a?"]
+    elif intervals:
+        # Jump-cut graph: trim each keep-interval, concat, then frame + captions.
+        graph = []
+        for i, (s, e) in enumerate(intervals):
+            graph.append(f"[0:v]trim=start={s:.3f}:end={e:.3f},setpts=PTS-STARTPTS[tv{i}]")
+            graph.append(f"[0:a]atrim=start={s:.3f}:end={e:.3f},asetpts=PTS-STARTPTS[ta{i}]")
+        pairs = "".join(f"[tv{i}][ta{i}]" for i in range(len(intervals)))
+        graph.append(f"{pairs}concat=n={len(intervals)}:v=1:a=1[cv][ca]")
+        tail = base_vf + (f",{subs_filter}" if subs_filter else "")
+        graph.append(f"[cv]{tail}[vout]")
+        cmd += ["-filter_complex", ";".join(graph), "-map", "[vout]", "-map", "[ca]"]
     else:
         vf = base_vf + (f",{subs_filter}" if subs_filter else "")
         cmd += ["-vf", vf]
@@ -304,6 +379,8 @@ def main() -> int:
         "out": str(out), "duration": round(duration, 2), "aspect": args.aspect,
         "template": args.template, "preset": args.preset,
         "broll": len(brolls),
+        "tightened": round(tight_dur, 2) if intervals else None,
+        "cuts": len(intervals) - 1 if intervals else 0,
     }))
     return 0
 

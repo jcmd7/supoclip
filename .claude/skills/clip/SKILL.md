@@ -92,6 +92,7 @@ python3 scripts/cut_clip.py .clips/<id>/source.mp4 \
 | `--crop-x` | `auto` or `0`–`1` | `auto` = face-centered (MediaPipe → Haar fallback); number = manual focus, 0.5 center |
 | `--broll` | `file.mp4:START:END` (repeatable, clip-relative seconds) | overlays b-roll video, keeps main audio, captions stay on top |
 | `--fontsdir` | dir of .ttf files | in this repo use `backend/fonts` (Anton, Archivo Black, Bangers, Inter, Montserrat); omit → system font fallback |
+| `--tighten` | max silence gap in seconds (e.g. `0.6`) | jump-cuts longer pauses, captions auto-retimed; not combinable with `--broll` (b-roll on a second pass) |
 | `--aspect` | `9:16` (default) / `original` | |
 | `--no-captions` | | |
 
@@ -105,6 +106,19 @@ python3 scripts/broll.py "ocean waves" --out .clips/<id>/broll/ocean.mp4
 ```
 Returns the file plus `credit`/`source` — mention the Pexels credit in your
 summary.
+
+### 4b. Stitch (optional)
+
+To combine several cut clips into one video (compilation, multi-moment short):
+
+```bash
+python3 scripts/stitch.py clips/c1.mp4 clips/c2.mp4 clips/c3.mp4 \
+  --out clips/final.mp4 --transition crossfade --fade 0.4
+```
+Transitions: `cut` (default), `crossfade`, or `stinger --stinger FILE` (this
+repo bundles `backend/transitions/circle_transition.mp4` and
+`flat_transition_1.mp4`). Inputs are auto-normalized to the first clip's
+resolution / 30fps / 48kHz, so mixed sources work.
 
 ### 5. Deliver
 
