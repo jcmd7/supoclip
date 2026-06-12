@@ -25,6 +25,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 import history
+import watcher
 
 HEALTH_HOST = os.getenv("HEALTH_HOST", "localhost")
 HEALTH_TIMEOUT_SECONDS = float(os.getenv("HEALTH_TIMEOUT_SECONDS", "3"))
@@ -324,6 +325,17 @@ async def get_clips():
         return {"items": []}
     items.sort(key=lambda c: c.get("created_at", 0), reverse=True)
     return {"items": items}
+
+
+@app.get("/api/events")
+async def get_events():
+    """Watcher alert log (newest first)."""
+    return {"items": watcher.recent_events()}
+
+
+@app.on_event("startup")
+async def _start_watcher():
+    asyncio.create_task(watcher.run(get_markets, get_hn))
 
 
 @app.get("/api/brief")

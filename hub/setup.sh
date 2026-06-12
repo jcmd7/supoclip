@@ -19,24 +19,34 @@ clone_or_update() {
 
 clone_or_update https://github.com/reconurge/flowsint.git flowsint
 clone_or_update https://github.com/666ghj/MiroFish.git mirofish
+clone_or_update https://github.com/mendableai/firecrawl.git firecrawl
+clone_or_update https://github.com/ItzCrazyKns/Perplexica.git perplexica
 
-# MiroFish's frontend defaults to host port 3000, which collides with the
-# SupoClip frontend. Remap it to 3100 (matches hub/modules.json).
-for compose in vendor/mirofish/docker-compose.yml vendor/mirofish/docker-compose.yaml; do
-  if [ -f "$compose" ] && grep -qE '"?3000:3000"?' "$compose"; then
-    sed -i.bak -E 's/("?)3000:3000("?)/\13100:3000\2/' "$compose"
-    echo "==> Remapped MiroFish frontend host port 3000 -> 3100 in $compose"
-  fi
-done
+# Several tools default to host port 3000, which collides with the SupoClip
+# frontend. Remap to the ports hub/modules.json expects.
+remap_port() {
+  local dir="$1" from="$2" to="$3"
+  for compose in "vendor/$dir"/docker-compose.yml "vendor/$dir"/docker-compose.yaml; do
+    if [ -f "$compose" ] && grep -qE "\"?${from}:${from}\"?" "$compose"; then
+      sed -i.bak -E "s/(\"?)${from}:${from}(\"?)/\1${to}:${from}\2/" "$compose"
+      echo "==> Remapped $dir host port ${from} -> ${to} in $compose"
+    fi
+  done
+}
+remap_port mirofish 3000 3100
+remap_port perplexica 3000 3210
 
 cat <<'EOF'
 
 Setup complete. Next steps:
 
   1. Configure each module's .env:
-       - SupoClip:  ../.env            (ASSEMBLY_AI_API_KEY, LLM, provider key)
-       - Flowsint:  vendor/flowsint    (AUTH_SECRET, MASTER_VAULT_KEY_V1, NEO4J_PASSWORD)
-       - MiroFish:  vendor/mirofish    (LLM_API_KEY, LLM_BASE_URL, LLM_MODEL_NAME, ZEP_API_KEY)
+       - SupoClip:   ../.env            (ASSEMBLY_AI_API_KEY, LLM, provider key)
+       - Flowsint:   vendor/flowsint    (AUTH_SECRET, MASTER_VAULT_KEY_V1, NEO4J_PASSWORD)
+       - MiroFish:   vendor/mirofish    (LLM_API_KEY, LLM_BASE_URL, LLM_MODEL_NAME, ZEP_API_KEY)
+       - Firecrawl:  vendor/firecrawl   (cp apps/api/.env.example; self-host docs in repo)
+       - Perplexica: vendor/perplexica  (cp sample.config.toml config.toml; point at Ollama for free)
+       - Watcher:    .env in hub/       (NTFY_TOPIC=<pick-a-topic> to enable phone pushes)
 
   2. Start everything:   make up
   3. Open the hub:       http://localhost:8090

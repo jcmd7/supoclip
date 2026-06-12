@@ -35,6 +35,12 @@ colliding with SupoClip's frontend.
 | **RSSHub** | Generates RSS for sources without feeds (X, subreddits, YouTube channels…) | [DIYgod/RSSHub](https://github.com/DIYgod/RSSHub) | hub compose (always on) |
 | **OpenBB** | Open-source Bloomberg terminal — equities/options/crypto/macro | [OpenBB-finance/OpenBB](https://github.com/OpenBB-finance/OpenBB) | `pip install openbb` then `openbb-api --port 6900` |
 | **Local LLM** | Ollama + Open WebUI — free local tokens for MiroFish/clip selection | [open-webui/open-webui](https://github.com/open-webui/open-webui) | `make llm` (opt-in profile, heavy images) |
+| **ntfy** | Self-hosted push notifications — the watcher's delivery channel | [binwiederhier/ntfy](https://github.com/binwiederhier/ntfy) | hub compose (always on) |
+| **Uptime Kuma** | Status monitoring with history, SLAs, notifications | [louislam/uptime-kuma](https://github.com/louislam/uptime-kuma) | hub compose (always on) |
+| **Firecrawl** | Any URL → clean LLM-ready markdown (feeder for sims/briefs) | [mendableai/firecrawl](https://github.com/mendableai/firecrawl) | `make setup` → vendored, run its compose |
+| **Perplexica** | Private AI answer engine (Perplexity-style, cites sources) | [ItzCrazyKns/Perplexica](https://github.com/ItzCrazyKns/Perplexica) | `make setup` → vendored, run its compose (remapped to :3210) |
+| **Karakeep** | AI-tagged bookmarks — the hub's memory | [karakeep-app/karakeep](https://github.com/karakeep-app/karakeep) | their compose ([docs](https://docs.karakeep.app/Installation/docker)); set port to 3300 |
+| **Outline** | Knowledge base for accumulating reports/briefs | [outline/outline](https://github.com/outline/outline) | advanced — needs Postgres + auth provider ([docs](https://docs.getoutline.com/s/hosting)); set port to 3380 |
 
 After starting RSSHub, any of its [routes](https://docs.rsshub.app) can be added
 to `modules.json` `feeds` using the `{host}` placeholder, e.g.
@@ -96,6 +102,29 @@ News sources live in the same file under `feeds` (RSS or Atom URLs).
 | 6900 | OpenBB Platform API |
 | 3200 | Open WebUI (`llm` profile) |
 | 11434 | Ollama API (`llm` profile) |
+| 8091 | ntfy push server |
+| 3001 | Uptime Kuma |
+| 3002 | Firecrawl API |
+| 3210 | Perplexica (remapped from 3000) |
+| 4000 | SearXNG (via Perplexica) |
+| 3300 | Karakeep (remap from 3000 in their compose) |
+| 3380 | Outline (remap from 3000 in their compose) |
+
+## Watcher → phone alerts
+
+The gateway runs a watcher loop that turns hub data into alerts: market moves
+≥ `MARKET_MOVE_THRESHOLD` points in 24h (history-backed) and HN stories over
+`HN_POINTS_THRESHOLD` points. Every alert lands in the dashboard's ALERTS panel
+(`/api/events`); to also get phone pushes:
+
+1. Pick a topic name and put `NTFY_TOPIC=my-secret-topic` in `hub/.env`
+2. `make gateway` (ntfy ships in the hub compose on :8091)
+3. Install the ntfy app on your phone, add your server
+   (`http://<your-host>:8091`) and subscribe to the topic
+
+Optional tuning in `hub/.env`: `MARKET_MOVE_THRESHOLD` (default 8),
+`HN_POINTS_THRESHOLD` (default 600), `WATCH_KEYWORDS=fed,bitcoin,ai` to only
+alert on matching text. Boot backlog is logged but never pushed.
 
 Flowsint runs its own Postgres/Neo4j/Redis bound to localhost — if its Redis
 publishes 6379 it will collide with SupoClip's; remap one of them.

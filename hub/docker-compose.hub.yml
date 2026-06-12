@@ -14,6 +14,12 @@ services:
       - HISTORY_DB=/data/hub_history.db
       # The gateway pings module ports published on the host machine.
       - HEALTH_HOST=host.docker.internal
+      # Watcher → ntfy push wiring (set NTFY_TOPIC in hub/.env to enable pushes)
+      - NTFY_URL=http://ntfy:8091
+      - NTFY_TOPIC=${NTFY_TOPIC:-}
+      - MARKET_MOVE_THRESHOLD=${MARKET_MOVE_THRESHOLD:-8}
+      - HN_POINTS_THRESHOLD=${HN_POINTS_THRESHOLD:-600}
+      - WATCH_KEYWORDS=${WATCH_KEYWORDS:-}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
@@ -32,6 +38,28 @@ services:
     container_name: hub-rsshub
     ports:
       - "1200:1200"
+    restart: unless-stopped
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: hub-ntfy
+    command: serve
+    environment:
+      - NTFY_BASE_URL=http://localhost:8091
+      - NTFY_LISTEN_HTTP=:8091
+    ports:
+      - "8091:8091"
+    volumes:
+      - ntfy_data:/var/lib/ntfy
+    restart: unless-stopped
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: hub-uptime-kuma
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
     restart: unless-stopped
 
   # Heavyweight local-LLM stack — opt in with: docker compose --profile llm up -d
@@ -65,3 +93,5 @@ volumes:
   changedetection_data:
   ollama_data:
   openwebui_data:
+  ntfy_data:
+  uptime_kuma_data:

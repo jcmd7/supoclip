@@ -87,6 +87,79 @@
         { "name": "webui", "health_url": "http://{host}:3200" },
         { "name": "ollama", "health_url": "http://{host}:11434" }
       ]
+    },
+    {
+      "id": "firecrawl",
+      "name": "Firecrawl",
+      "tagline": "URL → clean markdown for LLMs",
+      "description": "Turns any web page into LLM-ready markdown — the feeder for MiroFish sims, clip context, and research. Self-hosted API.",
+      "url": "http://localhost:3002",
+      "repo": "https://github.com/mendableai/firecrawl",
+      "tags": ["data", "scraping", "ai"],
+      "services": [
+        { "name": "api", "health_url": "http://{host}:3002/test" }
+      ]
+    },
+    {
+      "id": "perplexica",
+      "name": "Perplexica",
+      "tagline": "Private AI answer engine",
+      "description": "Self-hosted Perplexity backed by SearXNG — ask anything, get cited answers, no API cost.",
+      "url": "http://localhost:3210",
+      "repo": "https://github.com/ItzCrazyKns/Perplexica",
+      "tags": ["ai", "search", "research"],
+      "services": [
+        { "name": "app", "health_url": "http://{host}:3210" },
+        { "name": "searxng", "health_url": "http://{host}:4000" }
+      ]
+    },
+    {
+      "id": "karakeep",
+      "name": "Karakeep",
+      "tagline": "AI-tagged bookmarks",
+      "description": "Save links, tweets, and notes with automatic AI tagging and full-text search — the hub's memory of things worth keeping.",
+      "url": "http://localhost:3300",
+      "repo": "https://github.com/karakeep-app/karakeep",
+      "tags": ["knowledge", "bookmarks"],
+      "services": [
+        { "name": "app", "health_url": "http://{host}:3300" }
+      ]
+    },
+    {
+      "id": "ntfy",
+      "name": "ntfy",
+      "tagline": "Push notifications to your phone",
+      "description": "Self-hosted push. The hub's watcher sends market moves, alerts, and the morning brief here; subscribe on your phone.",
+      "url": "http://localhost:8091",
+      "repo": "https://github.com/binwiederhier/ntfy",
+      "tags": ["alerts", "infra"],
+      "services": [
+        { "name": "server", "health_url": "http://{host}:8091/v1/health" }
+      ]
+    },
+    {
+      "id": "uptime-kuma",
+      "name": "Uptime Kuma",
+      "tagline": "Mature status monitoring",
+      "description": "Proper uptime monitoring with history, SLAs, and its own notifications — heavier-duty than the built-in status checks.",
+      "url": "http://localhost:3001",
+      "repo": "https://github.com/louislam/uptime-kuma",
+      "tags": ["monitoring", "infra"],
+      "services": [
+        { "name": "app", "health_url": "http://{host}:3001" }
+      ]
+    },
+    {
+      "id": "outline",
+      "name": "Outline",
+      "tagline": "Team knowledge base",
+      "description": "Searchable wiki where MiroFish reports and morning briefs accumulate over time. Setup needs Postgres/Redis (see hub README).",
+      "url": "http://localhost:3380",
+      "repo": "https://github.com/outline/outline",
+      "tags": ["knowledge", "docs"],
+      "services": [
+        { "name": "app", "health_url": "http://{host}:3380" }
+      ]
     }
   ],
   "feeds": [

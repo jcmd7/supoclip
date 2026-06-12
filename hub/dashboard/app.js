@@ -277,6 +277,39 @@ async function refreshClips() {
   }
 }
 
+function eventAgo(ts) {
+  const mins = Math.floor((Date.now() / 1000 - ts) / 60);
+  if (mins < 1) return "now";
+  if (mins < 60) return `${mins}m`;
+  if (mins < 1440) return `${Math.floor(mins / 60)}h`;
+  return `${Math.floor(mins / 1440)}d`;
+}
+
+async function refreshEvents() {
+  const container = document.getElementById("events");
+  try {
+    const data = await fetchJson("/api/events");
+    if (!data.items.length) return; // keep idle hint
+    container.innerHTML = "";
+    for (const ev of data.items) {
+      const node = ev.url ? el("a", "news-item event-item") : el("div", "news-item event-item");
+      if (ev.url) {
+        node.href = ev.url;
+        node.target = "_blank";
+      }
+      if (ev.priority === "high") node.classList.add("event-high");
+      const top = el("div", "news-title");
+      top.appendChild(el("span", "event-kind", ev.title));
+      top.appendChild(document.createTextNode(" " + ev.body));
+      node.appendChild(top);
+      node.appendChild(el("div", "news-meta", eventAgo(ev.ts)));
+      container.appendChild(node);
+    }
+  } catch {
+    /* leave idle hint */
+  }
+}
+
 function tickClock() {
   document.getElementById("clock").textContent =
     new Date().toLocaleTimeString([], { hour12: false });
@@ -304,6 +337,7 @@ async function init() {
   refreshHN();
   refreshBrief();
   refreshClips();
+  refreshEvents();
   document.getElementById("market-search").addEventListener("input", renderMarkets);
 
   const modal = document.getElementById("clip-modal");
@@ -322,6 +356,7 @@ async function init() {
   setInterval(refreshHN, 2 * 60 * 1000);
   setInterval(refreshBrief, 5 * 60 * 1000);
   setInterval(refreshClips, 60 * 1000);
+  setInterval(refreshEvents, 30 * 1000);
 }
 
 init();

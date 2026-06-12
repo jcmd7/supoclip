@@ -245,6 +245,13 @@ main {
 .news-meta { color: var(--muted); font-size: 11px; margin-top: 3px; }
 .news-meta .src { color: var(--accent); }
 
+.event-item { border-left: 2px solid var(--border); padding-left: 8px; }
+.event-item.event-high { border-left-color: var(--offline); }
+.event-kind {
+  color: var(--accent); font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 1px; margin-right: 4px;
+}
+
 .muted { color: var(--muted); }
 
 footer {
