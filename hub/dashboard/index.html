@@ -18,13 +18,31 @@
     </div>
   </header>
 
+  <section id="brief" class="brief">
+    <span class="brief-tag">// BRIEF</span>
+    <span id="brief-headline" class="brief-headline">Loading briefing…</span>
+    <div id="brief-lines" class="brief-lines"></div>
+  </section>
+
   <main>
-    <section class="panel modules-panel">
-      <h2>// MODULES</h2>
-      <div id="modules" class="modules-grid">
-        <p class="muted">Loading modules…</p>
-      </div>
-    </section>
+    <div class="main-col">
+      <section class="panel modules-panel">
+        <h2>// MODULES</h2>
+        <div id="modules" class="modules-grid">
+          <p class="muted">Loading modules…</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>// CLIP LIBRARY</h2>
+          <span id="clip-count" class="muted"></span>
+        </div>
+        <div id="clips" class="clips-grid">
+          <p class="muted">No clips yet — run <code>/clip &lt;url&gt;</code> to fill this.</p>
+        </div>
+      </section>
+    </div>
 
     <aside class="rail">
       <section class="panel">
@@ -52,6 +70,14 @@
       </section>
     </aside>
   </main>
+
+  <div id="clip-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <video id="clip-player" controls></video>
+      <button id="clip-close" class="btn secondary">CLOSE</button>
+    </div>
+  </div>
 
   <footer>
     <span>gateway :8090</span>

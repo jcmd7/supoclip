@@ -212,6 +212,71 @@ async function refreshHN() {
   }
 }
 
+async function refreshBrief() {
+  try {
+    const data = await fetchJson("/api/brief");
+    document.getElementById("brief-headline").textContent = data.headline;
+    const container = document.getElementById("brief-lines");
+    container.innerHTML = "";
+    for (const line of data.lines) {
+      const node = line.url ? el("a", "brief-line") : el("span", "brief-line");
+      if (line.url) {
+        node.href = line.url;
+        node.target = "_blank";
+      }
+      node.appendChild(el("span", "k", line.kind));
+      node.appendChild(document.createTextNode(line.text));
+      container.appendChild(node);
+    }
+  } catch {
+    document.getElementById("brief-headline").textContent = "Briefing unavailable.";
+  }
+}
+
+function openClip(file) {
+  const modal = document.getElementById("clip-modal");
+  const player = document.getElementById("clip-player");
+  player.src = `/clips/${file}`;
+  modal.classList.remove("hidden");
+  player.play().catch(() => {});
+}
+
+async function refreshClips() {
+  const container = document.getElementById("clips");
+  try {
+    const data = await fetchJson("/api/clips");
+    document.getElementById("clip-count").textContent =
+      data.items.length ? `${data.items.length} clips` : "";
+    if (!data.items.length) return; // keep the empty-state hint
+    container.innerHTML = "";
+    for (const clip of data.items) {
+      const card = el("div", "clip-card");
+      card.addEventListener("click", () => openClip(clip.file));
+      if (clip.poster) {
+        const img = el("img", "clip-thumb");
+        img.src = `/clips/${clip.poster}`;
+        img.loading = "lazy";
+        card.appendChild(img);
+      } else {
+        card.appendChild(el("div", "clip-thumb-blank", "▶"));
+      }
+      const info = el("div", "clip-info");
+      info.appendChild(el("div", "clip-title", clip.title));
+      const meta = el("div", "clip-meta");
+      meta.appendChild(el("span", "virality", clip.virality != null ? `${clip.virality}` : ""));
+      meta.appendChild(
+        el("span", `pub-dot ${clip.published ? "yes" : "no"}`,
+           clip.published ? "● live" : "○ draft")
+      );
+      info.appendChild(meta);
+      card.appendChild(info);
+      container.appendChild(card);
+    }
+  } catch {
+    /* leave existing content */
+  }
+}
+
 function tickClock() {
   document.getElementById("clock").textContent =
     new Date().toLocaleTimeString([], { hour12: false });
@@ -237,11 +302,26 @@ async function init() {
   refreshNews();
   refreshMarkets();
   refreshHN();
+  refreshBrief();
+  refreshClips();
   document.getElementById("market-search").addEventListener("input", renderMarkets);
+
+  const modal = document.getElementById("clip-modal");
+  const player = document.getElementById("clip-player");
+  const closeModal = () => {
+    modal.classList.add("hidden");
+    player.pause();
+    player.src = "";
+  };
+  document.getElementById("clip-close").addEventListener("click", closeModal);
+  modal.querySelector(".modal-backdrop").addEventListener("click", closeModal);
+
   setInterval(refreshStatus, STATUS_INTERVAL_MS);
   setInterval(refreshNews, NEWS_INTERVAL_MS);
   setInterval(refreshMarkets, 60 * 1000);
   setInterval(refreshHN, 2 * 60 * 1000);
+  setInterval(refreshBrief, 5 * 60 * 1000);
+  setInterval(refreshClips, 60 * 1000);
 }
 
 init();

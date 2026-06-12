@@ -132,6 +132,18 @@ Use SendUserFile to send finished clips (status `proactive` if the user stepped
 away). Summarize each: timestamp range, hook, virality scores, why you picked
 it, template used.
 
+Also register each clip into the hub's shared library so it appears in Mission
+Control's CLIP LIBRARY panel:
+```bash
+python3 scripts/library.py register clips/clip1.mp4 \
+  --title "THIS CHANGED EVERYTHING" --range "2:04-2:32" \
+  --source-title "Podcast #42" --virality 85 \
+  --scores hook=22,engagement=21,value=20,shareability=22 --template hormozi
+```
+After publishing (step 6), re-register with `--published-url` so the panel shows
+it as published. Library lives at `~/.mission-control/clips` (override
+`CLIPS_DIR`; the gateway reads the same path).
+
 ### 6. Approve → publish (NEVER skip approval)
 
 Publishing is opt-in and gated on explicit approval **every time**:

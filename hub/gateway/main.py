@@ -307,4 +307,91 @@ async def get_hn():
     return {"items": _hn_cache["items"]}
 
 
+CLIPS_DIR = Path(os.path.expanduser(
+    os.getenv("CLIPS_DIR", "~/.mission-control/clips")
+))
+
+
+@app.get("/api/clips")
+async def get_clips():
+    """Clip library — reads library.json written by the clip skill."""
+    manifest = CLIPS_DIR / "library.json"
+    if not manifest.exists():
+        return {"items": []}
+    try:
+        items = json.loads(manifest.read_text())
+    except (json.JSONDecodeError, OSError):
+        return {"items": []}
+    items.sort(key=lambda c: c.get("created_at", 0), reverse=True)
+    return {"items": items}
+
+
+@app.get("/api/brief")
+async def get_brief():
+    """Deterministic morning brief assembled from cached + stored data.
+    No LLM required — always free, always renders."""
+    lines = []
+
+    # Warm the markets/HN caches so the brief works regardless of call order.
+    await get_markets()
+    await get_hn()
+
+    # Biggest market movers over 24h (needs history).
+    markets = history.enrich_with_deltas(list(_markets_cache["items"]))
+    movers = sorted(
+        (m for m in markets if m.get("delta_24h")),
+        key=lambda m: abs(m["delta_24h"]), reverse=True,
+    )[:3]
+    for m in movers:
+        d = m["delta_24h"]
+        arrow = "up" if d > 0 else "down"
+        lines.append({
+            "kind": "market",
+            "text": f"{m['question']} moved {arrow} {abs(d)} pts to {m['yes_pct']}%",
+            "url": m["url"],
+        })
+
+    # Top HN discussion right now.
+    hn = sorted(_hn_cache["items"], key=lambda h: h["points"], reverse=True)[:2]
+    for h in hn:
+        lines.append({
+            "kind": "hn",
+            "text": f"HN: {h['title']} ({h['points']} pts, {h['comments']} comments)",
+            "url": h["hn_url"],
+        })
+
+    # Clip activity in the last 24h.
+    clips = (await get_clips())["items"]
+    day_ago = time.time() - 86400
+    recent = [c for c in clips if c.get("created_at", 0) >= day_ago]
+    if recent:
+        published = sum(1 for c in recent if c.get("published"))
+        lines.append({
+            "kind": "clips",
+            "text": f"{len(recent)} clip(s) made in the last 24h, {published} published",
+            "url": None,
+        })
+
+    return {
+        "generated_at": time.time(),
+        "headline": _brief_headline(len(movers), len(hn), len(recent) if recent else 0),
+        "lines": lines,
+    }
+
+
+def _brief_headline(n_movers: int, n_hn: int, n_clips: int) -> str:
+    if not (n_movers or n_hn or n_clips):
+        return "Quiet so far — no tracked movement yet. History fills in as the hub runs."
+    bits = []
+    if n_movers:
+        bits.append(f"{n_movers} market move{'s' if n_movers != 1 else ''}")
+    if n_clips:
+        bits.append(f"{n_clips} new clip{'s' if n_clips != 1 else ''}")
+    return "Since yesterday: " + ", ".join(bits) + "." if bits else "Latest signals below."
+
+
+# Serve clip library files (videos + posters) before the SPA catch-all.
+if CLIPS_DIR.exists():
+    app.mount("/clips", StaticFiles(directory=str(CLIPS_DIR)), name="clips")
+
 app.mount("/", StaticFiles(directory=str(DASHBOARD_DIR), html=True), name="dashboard")
