@@ -155,15 +155,18 @@ main {
 
 .market-row { display: flex; align-items: center; gap: 10px; }
 .market-q { flex: 1; min-width: 0; }
+.pct-box { display: flex; flex-direction: column; align-items: flex-end; min-width: 48px; }
 .pct {
   font-size: 14px;
   font-weight: 700;
   color: var(--accent);
-  min-width: 44px;
   text-align: right;
 }
 .pct.high { color: var(--online); }
 .pct.low { color: var(--offline); }
+.delta { font-size: 10px; font-weight: 600; }
+.delta.up { color: var(--online); }
+.delta.down { color: var(--offline); }
 .src-tag {
   font-size: 9px;
   letter-spacing: 1px;

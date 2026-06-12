@@ -1,1 +1,3 @@
 vendor/
+gateway/hub_history.db
+gateway/hub_history.db-*

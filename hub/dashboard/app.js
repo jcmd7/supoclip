@@ -157,7 +157,16 @@ function renderMarkets() {
     q.appendChild(meta);
     link.appendChild(q);
     const pctClass = m.yes_pct >= 70 ? "pct high" : m.yes_pct <= 30 ? "pct low" : "pct";
-    link.appendChild(el("span", pctClass, m.yes_pct !== null ? `${m.yes_pct}%` : "—"));
+    const pctBox = el("div", "pct-box");
+    pctBox.appendChild(el("span", pctClass, m.yes_pct !== null ? `${m.yes_pct}%` : "—"));
+    if (m.delta_24h !== null && m.delta_24h !== undefined && m.delta_24h !== 0) {
+      const up = m.delta_24h > 0;
+      pctBox.appendChild(
+        el("span", `delta ${up ? "up" : "down"}`,
+           `${up ? "▲" : "▼"}${Math.abs(m.delta_24h)}`)
+      );
+    }
+    link.appendChild(pctBox);
     container.appendChild(link);
   }
 }

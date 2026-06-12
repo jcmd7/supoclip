@@ -24,6 +24,8 @@ import httpx
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+import history
+
 HEALTH_HOST = os.getenv("HEALTH_HOST", "localhost")
 HEALTH_TIMEOUT_SECONDS = float(os.getenv("HEALTH_TIMEOUT_SECONDS", "3"))
 NEWS_CACHE_SECONDS = int(os.getenv("NEWS_CACHE_SECONDS", "300"))
@@ -274,15 +276,22 @@ async def get_markets(source: str = "all", q: str = ""):
             )
         items = parse_polymarket(poly) + parse_kalshi(kalshi)
         items.sort(key=lambda i: i["volume_24h"], reverse=True)
+        history.record_markets(items)
         _markets_cache.update(fetched_at=now, items=items)
 
-    items = _markets_cache["items"]
+    items = history.enrich_with_deltas(list(_markets_cache["items"]))
     if source != "all":
         items = [i for i in items if i["source"] == source]
     if q:
         needle = q.lower()
         items = [i for i in items if needle in i["question"].lower()]
     return {"items": items}
+
+
+@app.get("/api/markets/history")
+async def get_market_history(key: str):
+    """Sparkline samples (oldest→newest yes_pct) for one market key."""
+    return {"key": key, "values": history.sparkline(key)}
 
 
 @app.get("/api/hn")
