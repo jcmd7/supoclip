@@ -38,12 +38,62 @@
         { "name": "frontend", "health_url": "http://{host}:3100" },
         { "name": "api", "health_url": "http://{host}:5001" }
       ]
+    },
+    {
+      "id": "changedetection",
+      "name": "changedetection.io",
+      "tagline": "Watch anything for changes",
+      "description": "Monitors any webpage, price, or API for changes and fires notifications — the hub's tripwire for things without feeds.",
+      "url": "http://localhost:5000",
+      "repo": "https://github.com/dgtlmoon/changedetection.io",
+      "tags": ["alerts", "monitoring"],
+      "services": [
+        { "name": "app", "health_url": "http://{host}:5000" }
+      ]
+    },
+    {
+      "id": "rsshub",
+      "name": "RSSHub",
+      "tagline": "RSS for everything",
+      "description": "Generates feeds for sources that don't have them — X accounts, subreddits, YouTube channels, GitHub releases — which the Signal Feed can then ingest.",
+      "url": "http://localhost:1200",
+      "repo": "https://github.com/DIYgod/RSSHub",
+      "tags": ["feeds", "data"],
+      "services": [
+        { "name": "app", "health_url": "http://{host}:1200" }
+      ]
+    },
+    {
+      "id": "openbb",
+      "name": "OpenBB",
+      "tagline": "Open-source Bloomberg terminal",
+      "description": "Equities, options, crypto, and macro research platform. The deep-dive companion to the Markets panel. Setup: pip install openbb, then run openbb-api (see hub README).",
+      "url": "http://localhost:6900",
+      "repo": "https://github.com/OpenBB-finance/OpenBB",
+      "tags": ["markets", "research"],
+      "services": [
+        { "name": "api", "health_url": "http://{host}:6900" }
+      ]
+    },
+    {
+      "id": "local-llm",
+      "name": "Local LLM",
+      "tagline": "Ollama + Open WebUI",
+      "description": "Run models locally — free unlimited tokens for MiroFish sims and clip selection. Start with: make llm (docker profile).",
+      "url": "http://localhost:3200",
+      "repo": "https://github.com/open-webui/open-webui",
+      "tags": ["ai", "infra"],
+      "services": [
+        { "name": "webui", "health_url": "http://{host}:3200" },
+        { "name": "ollama", "health_url": "http://{host}:11434" }
+      ]
     }
   ],
   "feeds": [
     { "name": "Hacker News", "url": "https://news.ycombinator.com/rss" },
     { "name": "BBC World", "url": "https://feeds.bbci.co.uk/news/world/rss.xml" },
     { "name": "TechCrunch", "url": "https://techcrunch.com/feed/" },
-    { "name": "Ars Technica", "url": "https://feeds.arstechnica.com/arstechnica/index" }
+    { "name": "Ars Technica", "url": "https://feeds.arstechnica.com/arstechnica/index" },
+    { "name": "GitHub Trending", "url": "http://{host}:1200/github/trending/daily/en-US" }
   ]
 }

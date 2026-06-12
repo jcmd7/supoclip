@@ -1,4 +1,4 @@
-.PHONY: setup up down status gateway gateway-down
+.PHONY: setup up down status gateway gateway-down llm llm-down
 
 setup:
 	./setup.sh
@@ -29,6 +29,15 @@ gateway:
 
 gateway-down:
 	docker compose -f docker-compose.hub.yml down
+
+## Local LLM stack (Ollama + Open WebUI). Pull a model after first start:
+##   docker exec hub-ollama ollama pull llama3.2
+llm:
+	docker compose -f docker-compose.hub.yml --profile llm up -d
+	@echo "Open WebUI at http://localhost:3200, Ollama API at :11434"
+
+llm-down:
+	docker compose -f docker-compose.hub.yml --profile llm down
 
 status:
 	@curl -sf http://localhost:8090/api/status | python3 -m json.tool

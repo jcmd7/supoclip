@@ -160,7 +160,8 @@ def _parse_feed(name: str, content: bytes) -> list[dict]:
 
 async def _fetch_feed(client: httpx.AsyncClient, feed: dict) -> list[dict]:
     try:
-        response = await client.get(feed["url"])
+        # Local feed generators (e.g. RSSHub) are addressed like health URLs.
+        response = await client.get(feed["url"].replace("{host}", HEALTH_HOST))
         response.raise_for_status()
     except httpx.HTTPError:
         return []

@@ -50,8 +50,14 @@ skip this step.
 python3 scripts/transcribe.py .clips/<id>/source.mp4 --model small
 ```
 Writes `transcript.json` (word-level) and `transcript.txt` (timestamped
-sentences). Local faster-whisper by default; `--engine assemblyai` if
-`ASSEMBLY_AI_API_KEY` is set. Models: `tiny`→`large-v3` (bigger = better).
+sentences). Engines:
+- `faster-whisper` (default) — local, free
+- `whisperx` — sharper word alignment; add `--diarize` for speaker labels
+  (`SPEAKER_00` etc. in transcript + words) — ideal for podcasts ("clip only
+  the guest"). Needs `pip install whisperx`, and `HF_TOKEN` for diarization.
+- `assemblyai` — cloud, needs `ASSEMBLY_AI_API_KEY`
+
+Models: `tiny`→`large-v3` (bigger = better).
 
 ### 3. Select & score moments (YOUR job)
 

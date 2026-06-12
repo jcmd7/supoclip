@@ -7,11 +7,61 @@ services:
     volumes:
       - ./modules.json:/app/modules.json:ro
       - ./dashboard:/app/dashboard:ro
+      - gateway_data:/data
     environment:
       - MODULES_FILE=/app/modules.json
       - DASHBOARD_DIR=/app/dashboard
+      - HISTORY_DB=/data/hub_history.db
       # The gateway pings module ports published on the host machine.
       - HEALTH_HOST=host.docker.internal
     extra_hosts:
       - "host.docker.internal:host-gateway"
     restart: unless-stopped
+
+  changedetection:
+    image: ghcr.io/dgtlmoon/changedetection.io:latest
+    container_name: hub-changedetection
+    ports:
+      - "5000:5000"
+    volumes:
+      - changedetection_data:/datastore
+    restart: unless-stopped
+
+  rsshub:
+    image: diygod/rsshub:latest
+    container_name: hub-rsshub
+    ports:
+      - "1200:1200"
+    restart: unless-stopped
+
+  # Heavyweight local-LLM stack — opt in with: docker compose --profile llm up -d
+  # (or `make llm`). Pull a model afterwards: docker exec hub-ollama ollama pull llama3.2
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hub-ollama
+    profiles: ["llm"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: hub-openwebui
+    profiles: ["llm"]
+    ports:
+      - "3200:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - openwebui_data:/app/backend/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+volumes:
+  gateway_data:
+  changedetection_data:
+  ollama_data:
+  openwebui_data:
