@@ -41,7 +41,7 @@ cat <<'EOF'
 Setup complete. Next steps:
 
   1. Configure each module's .env:
-       - SupoClip:   ../.env            (ASSEMBLY_AI_API_KEY, LLM, provider key)
+       - SupoClip:   ../apps/supoclip/.env  (ASSEMBLY_AI_API_KEY, LLM, provider key)
        - Flowsint:   vendor/flowsint    (AUTH_SECRET, MASTER_VAULT_KEY_V1, NEO4J_PASSWORD)
        - MiroFish:   vendor/mirofish    (LLM_API_KEY, LLM_BASE_URL, LLM_MODEL_NAME, ZEP_API_KEY)
        - Firecrawl:  vendor/firecrawl   (cp apps/api/.env.example; self-host docs in repo)

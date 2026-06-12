@@ -5,7 +5,7 @@ setup:
 
 ## Start every module + the hub gateway.
 up:
-	docker compose -f ../docker-compose.yml up -d
+	docker compose -f ../apps/supoclip/docker-compose.yml up -d
 	@if [ -d vendor/flowsint ]; then \
 		docker compose -f vendor/flowsint/docker-compose.prod.yml --project-directory vendor/flowsint up -d || \
 		(cd vendor/flowsint && make prod); \
@@ -21,7 +21,7 @@ down:
 	-docker compose -f docker-compose.hub.yml down
 	-docker compose --project-directory vendor/mirofish down
 	-docker compose -f vendor/flowsint/docker-compose.prod.yml --project-directory vendor/flowsint down
-	docker compose -f ../docker-compose.yml down
+	docker compose -f ../apps/supoclip/docker-compose.yml down
 
 ## Just the gateway (useful when modules are managed separately).
 gateway:
