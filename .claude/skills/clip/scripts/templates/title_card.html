@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  HyperFrames title-card composition (parametrized by hyperframes_gen.py).
+  Schema note: the data-* attributes below follow HyperFrames' documented
+  composition format (data-composition-id / data-start / data-width /
+  data-height). If your installed version differs, adjust here and re-render.
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body { margin: 0; padding: 0; }
+    #card {
+      width: {{WIDTH}}px;
+      height: {{HEIGHT}}px;
+      background: {{BG}};
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: "Arial Black", Arial, sans-serif;
+      overflow: hidden;
+    }
+    .title {
+      color: {{COLOR}};
+      font-size: 84px;
+      font-weight: 900;
+      text-align: center;
+      max-width: 86%;
+      line-height: 1.1;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0;
+      transform: translateY(40px) scale(0.96);
+      animation: rise 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .subtitle {
+      color: #ffffff;
+      font-size: 34px;
+      font-weight: 700;
+      margin-top: 28px;
+      opacity: 0;
+      animation: fade 0.5s ease forwards 0.5s;
+    }
+    .rule {
+      width: 0;
+      height: 4px;
+      background: {{COLOR}};
+      margin-top: 36px;
+      animation: grow 0.7s ease forwards 0.7s;
+    }
+    @keyframes rise { to { opacity: 1; transform: translateY(0) scale(1); } }
+    @keyframes fade { to { opacity: 1; } }
+    @keyframes grow { to { width: 320px; } }
+  </style>
+</head>
+<body>
+  <div id="card"
+       data-composition-id="title-card"
+       data-start="0"
+       data-width="{{WIDTH}}"
+       data-height="{{HEIGHT}}"
+       data-duration="{{DURATION}}"
+       data-fps="30">
+    <div class="title">{{TEXT}}</div>
+    <div class="subtitle">{{SUBTITLE}}</div>
+    <div class="rule"></div>
+  </div>
+</body>
+</html>

@@ -126,6 +126,20 @@ Use generated footage when stock doesn't fit or for original intros/backgrounds.
 The `--workflow` is an API-format JSON exported from ComfyUI (Save → API Format);
 `--prompt-node` is the positive-prompt node id in that workflow.
 
+### 4a. Title cards / intros (optional, HyperFrames)
+
+Generate an animated intro/outro/lower-third as an MP4 (HTML→video, no GPU, no
+keys; needs Node 22+ and ffmpeg):
+```bash
+python3 scripts/hyperframes_gen.py --text "THIS CHANGED EVERYTHING" \
+  --subtitle "ep. 42" --duration 3 --out .clips/<id>/assets/intro.mp4
+```
+Then stitch it onto the front of a clip (4b). Colors/size default to the 9:16
+hub theme; `--scaffold-only` writes the composition so you can
+`npx hyperframes preview` and tweak before rendering. The composition template
+is `scripts/templates/title_card.html` — its `data-*` schema tracks the
+installed HyperFrames version, adjust there if a render fails.
+
 ### 4b. Stitch (optional)
 
 To combine several cut clips into one video (compilation, multi-moment short):
