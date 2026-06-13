@@ -59,6 +59,8 @@ h1 { font-size: 16px; letter-spacing: 4px; font-weight: 600; }
 }
 .brief-tag { font-size: 11px; letter-spacing: 2px; color: var(--accent); }
 .brief-headline { font-size: 14px; color: var(--text); margin-left: 10px; }
+.brief-tool { float: right; font-size: 12px; color: var(--accent); text-decoration: none; border: 1px solid var(--border); border-radius: 4px; padding: 2px 10px; }
+.brief-tool:hover { border-color: var(--accent); }
 .brief-lines { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 8px; }
 .brief-line {
   font-size: 12px; color: var(--muted); text-decoration: none;

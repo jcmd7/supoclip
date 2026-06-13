@@ -125,6 +125,32 @@ generate B-roll/intros with no per-render cost. `hub/comfyui/` is gitignored
 > ComfyUI is the open path for "local model + interface". Seedance and similar
 > closed models are API-only (no downloadable weights), so they can't run here.
 
+## Storyboard Conceptor
+
+A guided idea → film pipeline at `/storyboard.html` (linked from the brief bar):
+
+```
+idea --LLM--> world bible --LLM--> beats --LLM--> script --LLM--> shot list
+per shot: SHOT TYPE → VISIBLE CONTEXT → style → (negative)  --T2I--> still
+          --I2V--> clip   + 360° panorama (Seedance-2 ground truth) + 3×3 sheet
+```
+
+Every stage is editable; projects persist under `~/.mission-control/storyboards`
+(or `STORYBOARD_DIR`). Export a project (json + assets) as a ZIP.
+
+- **LLM stages** use any OpenAI-compatible endpoint —
+  `STORYBOARD_LLM_BASE_URL` / `STORYBOARD_LLM_KEY` / `STORYBOARD_LLM_MODEL`
+  (point at Ollama via the `llm` profile for free local generation).
+- **Image/video generation** is provider-pluggable (`sb_providers.py`),
+  defaulting to local **ComfyUI** (`make gpu`). Drop ComfyUI API-format
+  workflows into `gateway/sb_workflows/{image,video,panorama,sheet}.json` with
+  `__PROMPT__ __NEGATIVE__ __WIDTH__ __HEIGHT__ __IMAGE__` placeholders.
+  Cloud T2I/I2V (incl. Seedance via BytePlus/fal) are documented hooks.
+
+Run the gateway test suite (`cd hub/gateway && pip install pytest && pytest`) —
+it covers the storyboard pipeline, watcher rules, history deltas, and market
+parsing with the LLM/providers mocked (no network/GPU needed).
+
 ## Watcher → phone alerts
 
 The gateway runs a watcher loop that turns hub data into alerts: market moves

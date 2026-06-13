@@ -25,7 +25,10 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 import history
+import sb_providers
+import storyboard
 import watcher
+from fastapi import Body, HTTPException
 
 HEALTH_HOST = os.getenv("HEALTH_HOST", "localhost")
 HEALTH_TIMEOUT_SECONDS = float(os.getenv("HEALTH_TIMEOUT_SECONDS", "3"))
@@ -311,6 +314,7 @@ async def get_hn():
 CLIPS_DIR = Path(os.path.expanduser(
     os.getenv("CLIPS_DIR", "~/.mission-control/clips")
 ))
+STORYBOARD_MOUNT = storyboard.STORYBOARD_DIR
 
 
 @app.get("/api/clips")
@@ -401,6 +405,132 @@ def _brief_headline(n_movers: int, n_hn: int, n_clips: int) -> str:
         bits.append(f"{n_clips} new clip{'s' if n_clips != 1 else ''}")
     return "Since yesterday: " + ", ".join(bits) + "." if bits else "Latest signals below."
 
+
+# --------------------------------------------------------------------------- #
+# Storyboard Conceptor                                                          #
+# --------------------------------------------------------------------------- #
+
+@app.get("/api/storyboard/projects")
+async def sb_list():
+    return {"items": storyboard.list_projects()}
+
+
+@app.post("/api/storyboard/projects")
+async def sb_create(payload: dict = Body(...)):
+    if not payload.get("idea"):
+        raise HTTPException(400, "idea is required")
+    return storyboard.create_project(
+        idea=payload["idea"], title=payload.get("title"),
+        settings=payload.get("settings"),
+    )
+
+
+@app.get("/api/storyboard/projects/{project_id}")
+async def sb_get(project_id: str):
+    project = storyboard.load_project(project_id)
+    if not project:
+        raise HTTPException(404, "project not found")
+    return project
+
+
+@app.patch("/api/storyboard/projects/{project_id}")
+async def sb_edit(project_id: str, payload: dict = Body(...)):
+    """Edit any editable field (settings, world, ideas, script, shots)."""
+    project = storyboard.load_project(project_id)
+    if not project:
+        raise HTTPException(404, "project not found")
+    for key in ("title", "idea", "settings", "world", "ideas", "script", "shots"):
+        if key in payload:
+            project[key] = payload[key]
+    project["updated_at"] = time.time()
+    storyboard.save_project(project)
+    return project
+
+
+@app.post("/api/storyboard/projects/{project_id}/stage/{stage}")
+async def sb_run_stage(project_id: str, stage: str):
+    project = storyboard.load_project(project_id)
+    if not project:
+        raise HTTPException(404, "project not found")
+    try:
+        project = await asyncio.to_thread(storyboard.run_stage, project, stage)
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(502, f"LLM stage failed: {e}")
+    storyboard.save_project(project)
+    return project
+
+
+@app.post("/api/storyboard/projects/{project_id}/shots/{shot_id}/generate")
+async def sb_generate(project_id: str, shot_id: str, kind: str = "image"):
+    project = storyboard.load_project(project_id)
+    if not project:
+        raise HTTPException(404, "project not found")
+    shot = next((s for s in project["shots"] if s["id"] == shot_id), None)
+    if not shot:
+        raise HTTPException(404, "shot not found")
+
+    settings = project["settings"]
+    assembled = storyboard.assemble_prompt(shot, settings)
+    assets = storyboard._project_dir(project_id) / "assets"
+    assets.mkdir(parents=True, exist_ok=True)
+
+    try:
+        if kind == "video":
+            if not shot.get("image"):
+                raise HTTPException(400, "generate the still image first")
+            out = assets / f"{shot_id}_video.mp4"
+            name = await asyncio.to_thread(
+                sb_providers.generate_video, assets / shot["image"],
+                assembled["prompt"], out, settings.get("i2v_provider", "comfyui"))
+            shot["video"] = name
+        else:
+            kmap = {"image": "image", "panorama": "panorama", "sheet": "sheet"}
+            if kind not in kmap:
+                raise HTTPException(400, f"unknown kind: {kind}")
+            out = assets / f"{shot_id}_{kind}.png"
+            name = await asyncio.to_thread(
+                sb_providers.generate_image, assembled["prompt"],
+                assembled["negative"], settings.get("aspect", "16:9"), out,
+                settings.get("t2i_provider", "comfyui"), kmap[kind])
+            shot[kind] = name
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(502, f"generation failed: {e}")
+
+    shot["status"] = "generated"
+    project["updated_at"] = time.time()
+    storyboard.save_project(project)
+    return {"shot": shot, "prompt": assembled}
+
+
+@app.get("/api/storyboard/projects/{project_id}/export")
+async def sb_export(project_id: str):
+    import io
+    import zipfile
+    from fastapi.responses import StreamingResponse
+
+    project = storyboard.load_project(project_id)
+    if not project:
+        raise HTTPException(404, "project not found")
+    pdir = storyboard._project_dir(project_id)
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+        zf.writestr("project.json", json.dumps(project, indent=2))
+        for asset in (pdir / "assets").glob("*"):
+            zf.write(asset, f"assets/{asset.name}")
+    buf.seek(0)
+    return StreamingResponse(
+        buf, media_type="application/zip",
+        headers={"Content-Disposition": f'attachment; filename="storyboard_{project_id}.zip"'})
+
+
+# Serve storyboard project assets.
+if STORYBOARD_MOUNT.exists():
+    app.mount("/storyboard-assets",
+              StaticFiles(directory=str(STORYBOARD_MOUNT)), name="storyboard-assets")
 
 # Serve clip library files (videos + posters) before the SPA catch-all.
 if CLIPS_DIR.exists():
