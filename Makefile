@@ -1,16 +1,17 @@
 # Mission Control — top-level orchestrator.
 # The hub is the product; SupoClip is one module under apps/supoclip.
-.PHONY: help hub hub-down up down status setup supoclip supoclip-down test
+.PHONY: help hub hub-down up down status setup supoclip supoclip-down test supoclip-pull
 
 help:
 	@echo "Mission Control"
-	@echo "  make hub         - start the hub gateway + always-on modules (no keys needed)"
-	@echo "  make up          - start the hub + SupoClip + vendored modules"
-	@echo "  make down        - stop everything"
-	@echo "  make setup       - clone vendored modules (Flowsint, MiroFish, Firecrawl, Perplexica)"
-	@echo "  make status      - print live module health JSON"
-	@echo "  make supoclip    - start just the SupoClip app"
-	@echo "  make test        - run SupoClip's test suite"
+	@echo "  make hub          - start the hub gateway + always-on modules (no keys needed)"
+	@echo "  make up           - start the hub + SupoClip + vendored modules"
+	@echo "  make down         - stop everything"
+	@echo "  make setup        - clone vendored modules (Flowsint, MiroFish, Firecrawl, Perplexica)"
+	@echo "  make status       - print live module health JSON"
+	@echo "  make supoclip     - start just the SupoClip app"
+	@echo "  make supoclip-pull- pull upstream SupoClip changes into apps/supoclip (needs network)"
+	@echo "  make test         - run SupoClip's test suite"
 
 ## Hub gateway + always-on modules (changedetection, RSSHub, ntfy, Uptime Kuma)
 hub:
@@ -42,3 +43,10 @@ supoclip-down:
 ## SupoClip's own test suite
 test:
 	$(MAKE) -C apps/supoclip test
+
+## Pull upstream SupoClip (FujiwaraChoki/supoclip) into apps/supoclip via subtree.
+## Run from a machine with network access (not the scoped cloud sandbox).
+## First time, ensure the remote exists:
+##   git remote add supoclip-upstream https://github.com/FujiwaraChoki/supoclip.git
+supoclip-pull:
+	git subtree pull --prefix=apps/supoclip supoclip-upstream main --squash

@@ -88,6 +88,26 @@ services:
       - ollama
     restart: unless-stopped
 
+  # Local video generation (ComfyUI + Wan/LTX). NVIDIA GPU required.
+  # Opt in with: docker compose --profile gpu up -d   (or `make gpu`)
+  # After first start, place model weights under hub/comfyui/models/ (see README).
+  comfyui:
+    image: yanwk/comfyui-boot:cu124-slim
+    container_name: hub-comfyui
+    profiles: ["gpu"]
+    ports:
+      - "8188:8188"
+    volumes:
+      - ./comfyui:/root/ComfyUI
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]
+    restart: unless-stopped
+
 volumes:
   gateway_data:
   changedetection_data:

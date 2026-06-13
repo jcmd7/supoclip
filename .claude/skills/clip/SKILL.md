@@ -106,12 +106,25 @@ Run independent cuts in parallel. Cut without `--broll` first; add b-roll on
 request or when a clip has a visual dead spot (b-roll windows should not cover
 the hook — keep the first ~3s clean).
 
-**B-roll sourcing** (needs `PEXELS_API_KEY`, free):
+**B-roll sourcing — two options:**
+
+1. Pexels stock footage (needs `PEXELS_API_KEY`, free):
 ```bash
 python3 scripts/broll.py "ocean waves" --out .clips/<id>/broll/ocean.mp4
 ```
 Returns the file plus `credit`/`source` — mention the Pexels credit in your
 summary.
+
+2. Locally generated footage via ComfyUI (the `comfyui` hub module, `make gpu`;
+   needs an NVIDIA GPU + Wan/LTX weights, no per-render cost, no attribution):
+```bash
+python3 scripts/comfy_gen.py --prompt "cinematic city skyline at dusk" \
+  --workflow workflows/wan_t2v.json --prompt-node 6 \
+  --out .clips/<id>/broll/city.mp4
+```
+Use generated footage when stock doesn't fit or for original intros/backgrounds.
+The `--workflow` is an API-format JSON exported from ComfyUI (Save → API Format);
+`--prompt-node` is the positive-prompt node id in that workflow.
 
 ### 4b. Stitch (optional)
 

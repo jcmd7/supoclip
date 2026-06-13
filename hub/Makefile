@@ -1,4 +1,4 @@
-.PHONY: setup up down status gateway gateway-down llm llm-down
+.PHONY: setup up down status gateway gateway-down llm llm-down gpu gpu-down
 
 setup:
 	./setup.sh
@@ -38,6 +38,15 @@ llm:
 
 llm-down:
 	docker compose -f docker-compose.hub.yml --profile llm down
+
+## Local video generation (ComfyUI). NVIDIA GPU required. Download Wan/LTX
+## weights into hub/comfyui/models/ after first start (see README).
+gpu:
+	docker compose -f docker-compose.hub.yml --profile gpu up -d
+	@echo "ComfyUI at http://localhost:8188 (place model weights in hub/comfyui/models/)"
+
+gpu-down:
+	docker compose -f docker-compose.hub.yml --profile gpu down
 
 status:
 	@curl -sf http://localhost:8090/api/status | python3 -m json.tool

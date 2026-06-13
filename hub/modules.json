@@ -160,6 +160,18 @@
       "services": [
         { "name": "app", "health_url": "http://{host}:3380" }
       ]
+    },
+    {
+      "id": "comfyui",
+      "name": "ComfyUI",
+      "tagline": "Local open-weights video generation",
+      "description": "Node-based interface for local AI video/image generation (Wan 2.2, LTX-Video, etc.). Generates B-roll/intros for /clip with no per-render cost. Needs an NVIDIA GPU (>=12GB VRAM): make gpu.",
+      "url": "http://localhost:8188",
+      "repo": "https://github.com/comfyanonymous/ComfyUI",
+      "tags": ["ai", "video", "infra"],
+      "services": [
+        { "name": "app", "health_url": "http://{host}:8188" }
+      ]
     }
   ],
   "feeds": [

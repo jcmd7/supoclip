@@ -41,6 +41,7 @@ colliding with SupoClip's frontend.
 | **Perplexica** | Private AI answer engine (Perplexity-style, cites sources) | [ItzCrazyKns/Perplexica](https://github.com/ItzCrazyKns/Perplexica) | `make setup` → vendored, run its compose (remapped to :3210) |
 | **Karakeep** | AI-tagged bookmarks — the hub's memory | [karakeep-app/karakeep](https://github.com/karakeep-app/karakeep) | their compose ([docs](https://docs.karakeep.app/Installation/docker)); set port to 3300 |
 | **Outline** | Knowledge base for accumulating reports/briefs | [outline/outline](https://github.com/outline/outline) | advanced — needs Postgres + auth provider ([docs](https://docs.getoutline.com/s/hosting)); set port to 3380 |
+| **ComfyUI** | Local open-weights video generation (Wan/LTX) for `/clip` b-roll & intros | [comfyanonymous/ComfyUI](https://github.com/comfyanonymous/ComfyUI) | `make gpu` (NVIDIA GPU profile); add weights to `hub/comfyui/models/` |
 
 After starting RSSHub, any of its [routes](https://docs.rsshub.app) can be added
 to `modules.json` `feeds` using the `{host}` placeholder, e.g.
@@ -109,6 +110,20 @@ News sources live in the same file under `feeds` (RSS or Atom URLs).
 | 4000 | SearXNG (via Perplexica) |
 | 3300 | Karakeep (remap from 3000 in their compose) |
 | 3380 | Outline (remap from 3000 in their compose) |
+| 8188 | ComfyUI (`gpu` profile) |
+
+## Local video generation (ComfyUI)
+
+`make gpu` starts ComfyUI on `:8188` (NVIDIA GPU required). After first start,
+download open-weights models into `hub/comfyui/models/` — for text/image→video,
+[Wan 2.2](https://github.com/Wan-Video) or [LTX-Video](https://github.com/Lightricks/LTX-Video)
+(lighter, near-realtime). Build a workflow in the UI, export it with
+**Save → API Format**, and the `/clip` skill's `comfy_gen.py` can drive it to
+generate B-roll/intros with no per-render cost. `hub/comfyui/` is gitignored
+(models are large).
+
+> ComfyUI is the open path for "local model + interface". Seedance and similar
+> closed models are API-only (no downloadable weights), so they can't run here.
 
 ## Watcher → phone alerts
 

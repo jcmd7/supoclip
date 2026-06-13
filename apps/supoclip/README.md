@@ -1,3 +1,10 @@
+<!--
+This directory is a vendored copy of SupoClip inside the Mission Control monorepo.
+Upstream: https://github.com/FujiwaraChoki/supoclip  (remote: supoclip-upstream)
+Pull upstream changes into this subfolder (run from a networked machine):
+    make supoclip-pull        # = git subtree pull --prefix=apps/supoclip supoclip-upstream main --squash
+-->
+
 # Fuck OpusClip.
 
 ... because good video clips shouldn't come with ugly watermarks or platform lock-in.
