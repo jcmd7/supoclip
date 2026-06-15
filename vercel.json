@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "web-preview/public",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/clips/(.*)", "destination": "/placeholders/clip.jpg" },
+    { "source": "/storyboard-assets/(.*)", "destination": "/placeholders/frame.jpg" }
+  ]
+}
