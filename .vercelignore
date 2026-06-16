@@ -1,0 +1,13 @@
+# Keep the Vercel upload lean — only the static preview is deployed.
+apps/
+hub/vendor/
+hub/gateway/__pycache__/
+hub/gateway/hub_history.db*
+hub/gateway/storyboards/
+hub/comfyui/
+.claude/
+**/__pycache__/
+**/node_modules/
+**/.venv/
+**/*.mp4
+**/*.m4a

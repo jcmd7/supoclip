@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Storyboard Conceptor</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="storyboard.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-mark">◍</span>
+      <h1>STORYBOARD · CONCEPTOR</h1>
+    </div>
+    <nav class="stage-nav" id="stage-nav">
+      <a href="/" class="pill">← HUB</a>
+      <span class="stage" data-stage="settings">⚙ SETTINGS</span>
+      <span class="stage" data-stage="world">01 WORLD</span>
+      <span class="stage" data-stage="ideas">02 IDEAS</span>
+      <span class="stage" data-stage="script">03 SCRIPT</span>
+      <span class="stage" data-stage="shots">04 SHOTS</span>
+    </nav>
+    <span id="sb-status" class="pill">IDLE</span>
+  </header>
+
+  <main class="sb-main">
+    <!-- SETTINGS / new project -->
+    <section class="sb-panel" data-panel="settings">
+      <h2>// IDEA</h2>
+      <textarea id="idea" rows="3" placeholder="Write your idea — one or two sentences…"></textarea>
+      <div class="sb-row">
+        <label>Style addition<input id="style" type="text" /></label>
+        <label>Negative<input id="negative" type="text" /></label>
+      </div>
+      <div class="sb-row">
+        <label>Aspect
+          <select id="aspect"><option>16:9</option><option>9:16</option><option>1:1</option></select>
+        </label>
+        <label>T2I<input id="t2i" type="text" value="comfyui" /></label>
+        <label>I2V<input id="i2v" type="text" value="comfyui" /></label>
+      </div>
+      <div class="sb-actions">
+        <button id="btn-create" class="btn">CREATE PROJECT</button>
+        <select id="project-picker" class="search"></select>
+      </div>
+    </section>
+
+    <!-- WORLD / IDEAS / SCRIPT text stages share a panel -->
+    <section class="sb-panel hidden" data-panel="text">
+      <div class="panel-head">
+        <h2 id="text-title">// WORLD</h2>
+        <div class="sb-actions">
+          <button id="btn-generate-stage" class="btn">GENERATE</button>
+          <button id="btn-save-stage" class="btn secondary">SAVE EDITS</button>
+        </div>
+      </div>
+      <textarea id="stage-text" rows="16" placeholder="Generate, then edit freely…"></textarea>
+    </section>
+
+    <!-- SHOTS -->
+    <section class="sb-panel hidden" data-panel="shots">
+      <div class="panel-head">
+        <h2>// SHOTS · IMAGES · B-ROLL</h2>
+        <div class="sb-actions">
+          <button id="btn-gen-shots" class="btn">GENERATE SHOT LIST</button>
+          <button id="btn-gen-all" class="btn secondary">Generate all missing images</button>
+          <a id="btn-export" class="btn secondary" href="#">⤓ Export ZIP</a>
+        </div>
+      </div>
+      <p class="muted sb-promptline">Final prompt per shot: SHOT&nbsp;TYPE → VISIBLE&nbsp;CONTEXT → style addition → global negative.</p>
+      <div id="shots" class="sb-shots-grid"></div>
+    </section>
+  </main>
+
+  <script src="storyboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+services:
+  hub-gateway:
+    build: ./gateway
+    container_name: hub-gateway
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./modules.json:/app/modules.json:ro
+      - ./dashboard:/app/dashboard:ro
+      - gateway_data:/data
+    environment:
+      - MODULES_FILE=/app/modules.json
+      - DASHBOARD_DIR=/app/dashboard
+      - HISTORY_DB=/data/hub_history.db
+      # The gateway pings module ports published on the host machine.
+      - HEALTH_HOST=host.docker.internal
+      # Watcher → ntfy push wiring (set NTFY_TOPIC in hub/.env to enable pushes)
+      - NTFY_URL=http://ntfy:8091
+      - NTFY_TOPIC=${NTFY_TOPIC:-}
+      - MARKET_MOVE_THRESHOLD=${MARKET_MOVE_THRESHOLD:-8}
+      - HN_POINTS_THRESHOLD=${HN_POINTS_THRESHOLD:-600}
+      - WATCH_KEYWORDS=${WATCH_KEYWORDS:-}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  changedetection:
+    image: ghcr.io/dgtlmoon/changedetection.io:latest
+    container_name: hub-changedetection
+    ports:
+      - "5000:5000"
+    volumes:
+      - changedetection_data:/datastore
+    restart: unless-stopped
+
+  rsshub:
+    image: diygod/rsshub:latest
+    container_name: hub-rsshub
+    ports:
+      - "1200:1200"
+    restart: unless-stopped
+
+  ntfy:
+    image: binwiederhier/ntfy:latest
+    container_name: hub-ntfy
+    command: serve
+    environment:
+      - NTFY_BASE_URL=http://localhost:8091
+      - NTFY_LISTEN_HTTP=:8091
+    ports:
+      - "8091:8091"
+    volumes:
+      - ntfy_data:/var/lib/ntfy
+    restart: unless-stopped
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1
+    container_name: hub-uptime-kuma
+    ports:
+      - "3001:3001"
+    volumes:
+      - uptime_kuma_data:/app/data
+    restart: unless-stopped
+
+  # Heavyweight local-LLM stack — opt in with: docker compose --profile llm up -d
+  # (or `make llm`). Pull a model afterwards: docker exec hub-ollama ollama pull llama3.2
+  ollama:
+    image: ollama/ollama:latest
+    container_name: hub-ollama
+    profiles: ["llm"]
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: hub-openwebui
+    profiles: ["llm"]
+    ports:
+      - "3200:8080"
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+    volumes:
+      - openwebui_data:/app/backend/data
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  # Local video generation (ComfyUI + Wan/LTX). NVIDIA GPU required.
+  # Opt in with: docker compose --profile gpu up -d   (or `make gpu`)
+  # After first start, place model weights under hub/comfyui/models/ (see README).
+  comfyui:
+    image: yanwk/comfyui-boot:cu124-slim
+    container_name: hub-comfyui
+    profiles: ["gpu"]
+    ports:
+      - "8188:8188"
+    volumes:
+      - ./comfyui:/root/ComfyUI
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: ["gpu"]
+    restart: unless-stopped
+
+volumes:
+  gateway_data:
+  changedetection_data:
+  ollama_data:
+  openwebui_data:
+  ntfy_data:
+  uptime_kuma_data:

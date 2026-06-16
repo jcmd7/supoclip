@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mission Control</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-mark">◉</span>
+      <h1 id="hub-name">MISSION CONTROL</h1>
+    </div>
+    <div class="meta">
+      <span id="overall-status" class="pill">—</span>
+      <span id="clock" class="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <section id="brief" class="brief">
+    <span class="brief-tag">// BRIEF</span>
+    <span id="brief-headline" class="brief-headline">Loading briefing…</span>
+    <a href="storyboard.html" class="brief-tool">◍ Storyboard Conceptor →</a>
+    <div id="brief-lines" class="brief-lines"></div>
+  </section>
+
+  <main>
+    <div class="main-col">
+      <section class="panel modules-panel">
+        <h2>// MODULES</h2>
+        <div id="modules" class="modules-grid">
+          <p class="muted">Loading modules…</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>// CLIP LIBRARY</h2>
+          <span id="clip-count" class="muted"></span>
+        </div>
+        <div id="clips" class="clips-grid">
+          <p class="muted">No clips yet — run <code>/clip &lt;url&gt;</code> to fill this.</p>
+        </div>
+      </section>
+    </div>
+
+    <aside class="rail">
+      <section class="panel">
+        <h2>// ALERTS</h2>
+        <div id="events" class="news-list rail-list">
+          <p class="muted">Watcher idle — alerts appear here.</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>// MARKETS</h2>
+          <input id="market-search" class="search" type="search" placeholder="filter…" />
+        </div>
+        <div id="markets" class="news-list rail-list">
+          <p class="muted">Loading markets…</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>// HACKER NEWS</h2>
+        <div id="hn" class="news-list rail-list">
+          <p class="muted">Loading…</p>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>// SIGNAL FEED</h2>
+        <div id="news" class="news-list rail-list">
+          <p class="muted">Loading feeds…</p>
+        </div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="clip-modal" class="modal hidden">
+    <div class="modal-backdrop"></div>
+    <div class="modal-body">
+      <video id="clip-player" controls></video>
+      <button id="clip-close" class="btn secondary">CLOSE</button>
+    </div>
+  </div>
+
+  <footer>
+    <span>gateway :8090</span>
+    <span id="last-check" class="muted"></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

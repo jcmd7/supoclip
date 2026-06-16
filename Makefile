@@ -1,21 +1,52 @@
-BACKEND_TEST_ENV = DATABASE_URL=$${TEST_DATABASE_URL:-$${DATABASE_URL:-postgresql+asyncpg://supoclip:supoclip_password@127.0.0.1:5432/supoclip}} REDIS_HOST=$${REDIS_HOST:-127.0.0.1} REDIS_PORT=$${REDIS_PORT:-6379}
-FRONTEND_TEST_ENV = DATABASE_URL=$${TEST_DATABASE_URL:-$${DATABASE_URL:-postgresql://supoclip:supoclip_password@127.0.0.1:5432/supoclip}} BACKEND_AUTH_SECRET=$${BACKEND_AUTH_SECRET:-supoclip_test_secret} BETTER_AUTH_SECRET=$${BETTER_AUTH_SECRET:-supoclip_better_auth_test_secret} NEXT_PUBLIC_SELF_HOST=true
+# Mission Control — top-level orchestrator.
+# The hub is the product; SupoClip is one module under apps/supoclip.
+.PHONY: help hub hub-down up down status setup supoclip supoclip-down test supoclip-pull
 
-.PHONY: test test-backend test-frontend test-e2e test-ci
+help:
+	@echo "Mission Control"
+	@echo "  make hub          - start the hub gateway + always-on modules (no keys needed)"
+	@echo "  make up           - start the hub + SupoClip + vendored modules"
+	@echo "  make down         - stop everything"
+	@echo "  make setup        - clone vendored modules (Flowsint, MiroFish, Firecrawl, Perplexica)"
+	@echo "  make status       - print live module health JSON"
+	@echo "  make supoclip     - start just the SupoClip app"
+	@echo "  make supoclip-pull- pull upstream SupoClip changes into apps/supoclip (needs network)"
+	@echo "  make test         - run SupoClip's test suite"
 
-test: test-backend test-frontend
+## Hub gateway + always-on modules (changedetection, RSSHub, ntfy, Uptime Kuma)
+hub:
+	$(MAKE) -C hub gateway
 
-test-backend:
-	cd backend && uv sync --all-groups
-	cd backend && $(BACKEND_TEST_ENV) .venv/bin/pytest
+hub-down:
+	$(MAKE) -C hub gateway-down
 
-test-frontend:
-	cd frontend && npm install
-	cd frontend && $(FRONTEND_TEST_ENV) npm run test:coverage
+## Everything: hub + SupoClip + vendored module stacks
+up:
+	$(MAKE) -C hub up
 
-test-e2e:
-	cd frontend && npm install
-	cd frontend && $(FRONTEND_TEST_ENV) npx playwright install --with-deps
-	cd frontend && $(FRONTEND_TEST_ENV) npm run test:e2e
+down:
+	$(MAKE) -C hub down
 
-test-ci: test-backend test-frontend test-e2e
+setup:
+	$(MAKE) -C hub setup
+
+status:
+	$(MAKE) -C hub status
+
+## Just the SupoClip app (apps/supoclip)
+supoclip:
+	docker compose -f apps/supoclip/docker-compose.yml up -d
+
+supoclip-down:
+	docker compose -f apps/supoclip/docker-compose.yml down
+
+## SupoClip's own test suite
+test:
+	$(MAKE) -C apps/supoclip test
+
+## Pull upstream SupoClip (FujiwaraChoki/supoclip) into apps/supoclip via subtree.
+## Run from a machine with network access (not the scoped cloud sandbox).
+## First time, ensure the remote exists:
+##   git remote add supoclip-upstream https://github.com/FujiwaraChoki/supoclip.git
+supoclip-pull:
+	git subtree pull --prefix=apps/supoclip supoclip-upstream main --squash
