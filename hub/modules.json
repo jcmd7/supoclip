@@ -172,6 +172,18 @@
       "services": [
         { "name": "app", "health_url": "http://{host}:8188" }
       ]
+    },
+    {
+      "id": "facefusion",
+      "name": "FaceFusion",
+      "tagline": "Face swap for images + video",
+      "description": "Industry-grade face swapper/enhancer (uses InsightFace/InSwapper under the hood). Gradio UI + headless CLI the /clip skill can call. Consented/authorized faces only. NVIDIA GPU recommended; run it via `make setup` then its run command.",
+      "url": "http://localhost:7860",
+      "repo": "https://github.com/facefusion/facefusion",
+      "tags": ["ai", "video", "faces"],
+      "services": [
+        { "name": "ui", "health_url": "http://{host}:7860" }
+      ]
     }
   ],
   "feeds": [

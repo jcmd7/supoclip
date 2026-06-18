@@ -21,6 +21,7 @@ clone_or_update https://github.com/reconurge/flowsint.git flowsint
 clone_or_update https://github.com/666ghj/MiroFish.git mirofish
 clone_or_update https://github.com/mendableai/firecrawl.git firecrawl
 clone_or_update https://github.com/ItzCrazyKns/Perplexica.git perplexica
+clone_or_update https://github.com/facefusion/facefusion.git facefusion
 
 # Several tools default to host port 3000, which collides with the SupoClip
 # frontend. Remap to the ports hub/modules.json expects.

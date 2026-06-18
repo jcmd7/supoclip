@@ -126,6 +126,18 @@ Use generated footage when stock doesn't fit or for original intros/backgrounds.
 The `--workflow` is an API-format JSON exported from ComfyUI (Save → API Format);
 `--prompt-node` is the positive-prompt node id in that workflow.
 
+### 4c. Face swap (optional, FaceFusion)
+
+Swap a consented face onto a clip, generated footage, or storyboard frame
+(FaceFusion = InsightFace/InSwapper under the hood; `make setup` clones it,
+needs its env + ideally an NVIDIA GPU):
+```bash
+python3 scripts/face_swap.py --source face.jpg --target clip.mp4 \
+  --out .clips/<id>/clips/clip_swapped.mp4 --enhance
+```
+RESPONSIBLE USE: only faces you have the right and consent to use; no misleading
+impersonation of real people. Flags track the installed FaceFusion version.
+
 ### 4a. Title cards / intros (optional, HyperFrames)
 
 Generate an animated intro/outro/lower-third as an MP4 (HTML→video, no GPU, no
