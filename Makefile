@@ -1,17 +1,46 @@
 # Mission Control — top-level orchestrator.
 # The hub is the product; SupoClip is one module under apps/supoclip.
-.PHONY: help hub hub-down up down status setup supoclip supoclip-down test supoclip-pull
+.PHONY: help install lite full hub hub-down up down status setup supoclip supoclip-down test supoclip-pull gpu gpu-down
 
 help:
-	@echo "Mission Control"
-	@echo "  make hub          - start the hub gateway + always-on modules (no keys needed)"
-	@echo "  make up           - start the hub + SupoClip + vendored modules"
+	@echo "Mission Control — desktop setup"
+	@echo "  make install      - one-time: .env, clone source modules, pull all images"
+	@echo "  make lite         - START the zero-key core (hub + alerts + feeds), no GPU"
+	@echo "  make full         - START everything that doesn't need a GPU (+ SupoClip, vendored)"
+	@echo "  make gpu          - START GPU tools (ComfyUI; add Ollama with: make -C hub llm)"
 	@echo "  make down         - stop everything"
-	@echo "  make setup        - clone vendored modules (Flowsint, MiroFish, Firecrawl, Perplexica)"
 	@echo "  make status       - print live module health JSON"
-	@echo "  make supoclip     - start just the SupoClip app"
-	@echo "  make supoclip-pull- pull upstream SupoClip changes into apps/supoclip (needs network)"
-	@echo "  make test         - run SupoClip's test suite"
+	@echo "  --- pieces ---"
+	@echo "  make hub          - just the hub gateway + always-on modules"
+	@echo "  make supoclip     - just the SupoClip app"
+	@echo "  make setup        - clone vendored modules only"
+	@echo "  make supoclip-pull- pull upstream SupoClip into apps/supoclip"
+	@echo "  make test         - run the gateway + SupoClip test suites"
+
+## ─── One-time install: config + source clones + image pulls ──────────────────
+install:
+	@test -f .env || (cp .env.example .env && echo "created .env — edit it to add keys (all optional for 'make lite')")
+	$(MAKE) -C hub setup
+	docker compose -f hub/docker-compose.hub.yml pull
+	@echo ""
+	@echo "Install complete. Start with:  make lite   (or 'make full' for everything non-GPU)"
+
+## ─── Tiers ───────────────────────────────────────────────────────────────────
+## Zero-key core: hub gateway + changedetection + RSSHub + ntfy + Uptime Kuma.
+lite:
+	$(MAKE) -C hub gateway
+	@echo "Mission Control at http://localhost:8090"
+
+## Everything that runs on CPU: lite + SupoClip + vendored stacks.
+full:
+	$(MAKE) -C hub up
+
+## GPU tools (ComfyUI). Add local LLM with: make -C hub llm
+gpu:
+	$(MAKE) -C hub gpu
+
+gpu-down:
+	$(MAKE) -C hub gpu-down
 
 ## Hub gateway + always-on modules (changedetection, RSSHub, ntfy, Uptime Kuma)
 hub:
@@ -40,9 +69,10 @@ supoclip:
 supoclip-down:
 	docker compose -f apps/supoclip/docker-compose.yml down
 
-## SupoClip's own test suite
+## Test suites: gateway (pytest) + SupoClip
 test:
-	$(MAKE) -C apps/supoclip test
+	cd hub/gateway && python3 -m pytest test_gateway.py -q
+	-$(MAKE) -C apps/supoclip test
 
 ## Pull upstream SupoClip (FujiwaraChoki/supoclip) into apps/supoclip via subtree.
 ## Run from a machine with network access (not the scoped cloud sandbox).
