@@ -20,6 +20,7 @@ from ...services.billing_service import BillingService, BillingLimitExceeded
 from ...auth_headers import get_authenticated_user_id
 from ...workers.job_queue import JobQueue
 from ...workers.progress import ProgressTracker
+from ...task_lifecycle import is_terminal_task_status
 from ...config import get_config
 from ...font_registry import is_font_accessible
 from ...clip_cleanup import normalize_clip_cleanup_settings
@@ -385,8 +386,8 @@ async def get_task_progress_sse(task_id: str, request: Request):
             ),
         }
 
-        # If task is already completed or error, close connection
-        if task.get("status") in ["completed", "error"]:
+        # Close immediately for any terminal task (including cancellation)
+        if is_terminal_task_status(task.get("status")):
             yield {"event": "close", "data": json.dumps({"status": task.get("status")})}
             return
 
@@ -408,7 +409,7 @@ async def get_task_progress_sse(task_id: str, request: Request):
                 yield {"event": event_type, "data": json.dumps(progress_data)}
 
                 # Close connection if task is done
-                if progress_data.get("status") in ["completed", "error"]:
+                if is_terminal_task_status(progress_data.get("status")):
                     yield {
                         "event": "close",
                         "data": json.dumps({"status": progress_data.get("status")}),
@@ -803,7 +804,7 @@ async def cancel_task(
         task_service = TaskService(db)
         task = await _require_task_owner(request, task_service, db, task_id)
 
-        if task.get("status") in ["completed", "error", "cancelled"]:
+        if is_terminal_task_status(task.get("status")):
             return {"message": f"Task already in terminal state: {task.get('status')}"}
 
         runtime_config = get_config()
@@ -815,16 +816,26 @@ async def cancel_task(
         )
         try:
             await redis_client.setex(f"task_cancel:{task_id}", 3600, "1")
+            await task_service.task_repo.update_task_status(
+                db,
+                task_id,
+                "cancelled",
+                progress=0,
+                progress_message="Cancelled by user",
+            )
+            # Database is authoritative; a failed SSE notification must not undo
+            # or make a successful cancellation appear unsuccessful to the user.
+            try:
+                await ProgressTracker(redis_client, task_id).update(
+                    0, "Cancelled by user", "cancelled"
+                )
+            except Exception:
+                logger.warning(
+                    "Cancelled task %s but could not publish status", task_id,
+                    exc_info=True,
+                )
         finally:
             await redis_client.close()
-
-        await task_service.task_repo.update_task_status(
-            db,
-            task_id,
-            "cancelled",
-            progress=0,
-            progress_message="Cancelled by user",
-        )
 
         return {"message": "Task cancellation requested"}
     except HTTPException:
